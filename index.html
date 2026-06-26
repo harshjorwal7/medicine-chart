@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#1a2a4a"/>
+<title>Medicine Tracker</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#F7F8FC;min-height:100vh;padding:12px;}
+  h1{font-size:20px;font-weight:700;}
+  button{cursor:pointer;font-family:inherit;}
+
+  .header{background:linear-gradient(135deg,#1a2a4a 0%,#2d4a8a 100%);border-radius:16px;padding:20px;color:white;margin-bottom:16px;}
+  .header-row{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;}
+  .header-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:4px;}
+  .header-date{font-size:12px;opacity:.75;margin-top:4px;}
+  .progress-label{font-size:10px;opacity:.7;margin-bottom:4px;letter-spacing:1px;}
+  .progress-pct{font-size:28px;font-weight:800;line-height:1;}
+  .progress-sub{font-size:10px;opacity:.6;margin-top:3px;}
+  .prog-bar-bg{margin-top:14px;background:rgba(255,255,255,.2);border-radius:99px;height:6px;}
+  .prog-bar{background:#6EE7B7;border-radius:99px;height:6px;transition:width .4s ease;}
+
+  .reminder-box{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:16px;margin-bottom:14px;}
+  .reminder-box h2{font-size:13px;font-weight:700;color:#222;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+  .reminder-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .reminder-slot{background:#f7f8fc;border-radius:10px;padding:10px 12px;}
+  .reminder-slot label{font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:6px;}
+  .reminder-slot input[type=time]{width:100%;border:1.5px solid #ddd;border-radius:8px;padding:6px 8px;font-size:13px;color:#222;background:white;}
+  .reminder-slot input[type=time]:focus{outline:none;border-color:#2d4a8a;}
+  .reminder-meds{font-size:10px;color:#888;margin-top:4px;}
+  .notif-btn{width:100%;margin-top:12px;padding:10px;border-radius:10px;border:none;background:#2d4a8a;color:white;font-size:13px;font-weight:600;}
+  .notif-btn:disabled{background:#aaa;}
+  .notif-status{font-size:11px;text-align:center;margin-top:8px;color:#666;}
+  .notif-granted{color:#5BAD8F;font-weight:600;}
+  .notif-denied{color:#C0584A;font-weight:600;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:10px;}
+  .tab-btn{padding:6px 14px;border-radius:8px;border:none;font-size:12px;font-weight:600;background:#e5e7eb;color:#555;}
+  .tab-btn.active{background:#2d4a8a;color:white;}
+  .week-nav{display:flex;gap:6px;align-items:center;margin-bottom:10px;}
+  .week-nav button{padding:6px 10px;border-radius:8px;border:1px solid #ddd;background:white;font-size:12px;}
+  .week-nav span{font-size:12px;color:#555;font-weight:600;}
+
+  .table-wrap{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden;margin-bottom:12px;}
+  .table-scroll{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;min-width:460px;}
+  thead tr{background:#f1f3f8;}
+  th{padding:6px 3px;text-align:center;border-bottom:1px solid #e8eaf0;}
+  th.med-col{text-align:left;padding:10px 12px;min-width:160px;}
+  .th-day{font-size:9px;font-weight:600;color:#aaa;}
+  .th-day.weekend{color:#E07B39;}
+  .th-num{font-size:11px;font-weight:700;color:#444;}
+  .th-num.weekend{color:#E07B39;}
+  .th-mon{font-size:9px;color:#bbb;}
+  td{text-align:center;padding:4px 2px;border-bottom:1px solid #f0f2f7;}
+  td.med-info{padding:8px 12px;text-align:left;}
+  tr:nth-child(even) td{background:#fafbfd;}
+  tr:nth-child(odd) td{background:white;}
+  .med-name{font-size:12px;font-weight:700;color:#222;}
+  .med-time{font-size:10px;color:#888;}
+  .alt-badge{font-size:9px;font-weight:600;padding:1px 6px;border-radius:99px;display:inline-block;margin-top:2px;}
+  .dose-btn{width:28px;height:28px;border-radius:8px;border:2px solid #ccc;background:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:all .15s;}
+  .dose-btn.done{border:none;color:white;}
+  .dose-skip{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:#e0e0e0;font-size:14px;}
+
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:12px;}
+  .sum-card{background:white;border-radius:12px;padding:12px;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+  .sum-card-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+  .sum-dot{width:8px;height:8px;border-radius:50%;}
+  .sum-name{font-size:11px;font-weight:700;color:#333;}
+  .sum-bar-bg{background:#f1f3f8;border-radius:99px;height:5px;margin-bottom:5px;}
+  .sum-bar{border-radius:99px;height:5px;transition:width .4s;}
+  .sum-nums{display:flex;justify-content:space-between;}
+  .sum-taken{font-size:10px;color:#aaa;}
+  .sum-pct{font-size:10px;font-weight:700;}
+
+  .footer{text-align:center;font-size:11px;color:#bbb;padding:10px 0 20px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const MEDS = [
+  { id:"sompraz",   name:"Sompraz 40mg",       timing:"Morning \u2013 Before Breakfast", color:"#4F86C6", light:"#EBF2FB", alternate:true  },
+  { id:"actopro_m", name:"Actopro 100mg",       timing:"Morning \u2013 Before Breakfast", color:"#E07B39", light:"#FDF0E8", alternate:false },
+  { id:"actopro_e", name:"Actopro 100mg",       timing:"Evening \u2013 Before Dinner",    color:"#E07B39", light:"#FDF0E8", alternate:false },
+  { id:"neurobion", name:"Neurobion",            timing:"Morning \u2013 After Breakfast",  color:"#5BAD8F", light:"#EAF6F1", alternate:false },
+  { id:"sharanga",  name:"Sharanga",             timing:"Morning \u2013 After Breakfast",  color:"#9B6BB5", light:"#F3EDF8", alternate:false },
+  { id:"probiotic", name:"Probiotic / Prebiotic",timing:"Night \u2013 After Dinner",       color:"#C0584A", light:"#FAEEEC", alternate:false },
+];
+const START = new Date(2026, 5, 25);
+const DAYS  = 30;
+const DEFAULT_TIMES = { morning:"07:30", evening:"19:00", night:"21:30" };
+let checked = JSON.parse(localStorage.getItem("med_checked")||"{}");
+let times = JSON.parse(localStorage.getItem("med_times")||JSON.stringify(DEFAULT_TIMES));
+let view = "week";
+let weekOffset = 0;
+let notifPerm = Notification.permission;
+function getDate(i){const d=new Date(START);d.setDate(d.getDate()+i);return d;}
+function isWeekend(d){return d.getDay()===0||d.getDay()===6;}
+function shouldTake(med,i){return med.alternate?i%2===0:true;}
+function isChecked(id,i){return!!checked[id+"_"+i];}
+function save(){localStorage.setItem("med_checked",JSON.stringify(checked));}
+function saveTimes(){localStorage.setItem("med_times",JSON.stringify(times));}
+function toggle(id,i){const k=id+"_"+i;checked[k]=!checked[k];save();render();}
+function requestNotif(){if(!("Notification"in window)){alert("No notification support.");return;}Notification.requestPermission().then(p=>{notifPerm=p;if(p==="granted")scheduleAll();render();});}
+function scheduleAll(){scheduleSlot("morning","Morning Medicines","Sompraz (alt), Actopro, Neurobion, Sharanga");scheduleSlot("evening","Evening Medicine","Actopro 100mg before dinner");scheduleSlot("night","Night Medicine","Probiotic / Prebiotic after dinner");}
+function scheduleSlot(slot,title,body){if(notifPerm!=="granted")return;const[h,m]=times[slot].split(":").map(Number);const now=new Date();const fire=new Date();fire.setHours(h,m,0,0);if(fire<=now)fire.setDate(fire.getDate()+1);setTimeout(()=>{new Notification(title,{body,icon:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>\ud83d\udc8a</text></svg>"});setInterval(()=>{new Notification(title,{body});},86400000);},fire-now);}
+function calcProgress(){let t=0,d=0;MEDS.forEach(m=>{for(let i=0;i<DAYS;i++){if(shouldTake(m,i)){t++;if(isChecked(m.id,i))d++;}}});return{total:t,done:d,pct:t?Math.round(d/t*100):0};}
+function medProgress(med){let t=0,d=0;for(let i=0;i<DAYS;i++){if(shouldTake(med,i)){t++;if(isChecked(med.id,i))d++;}}return{total:t,done:d,pct:t?Math.round(d/t*100):0};}
+function render(){const{total,done,pct}=calcProgress();const ws=weekOffset*7,we=Math.min(ws+7,DAYS);const days=view==="all"?Array.from({length:DAYS},(_,i)=>i):Array.from({length:we-ws},(_,i)=>ws+i);const granted=notifPerm==="granted",denied=notifPerm==="denied";document.getElementById("app").innerHTML=`<div style="max-width:900px;margin:0 auto;"><div class="header"><div class="header-row"><div><div class="header-sub">Medicine Tracker</div><h1>30-Day Schedule</h1><div class="header-date">25 Jun \u2013 24 Jul 2026</div></div><div style="text-align:right"><div class="progress-label">OVERALL PROGRESS</div><div class="progress-pct">${pct}%</div><div class="progress-sub">${done} of ${total} doses</div></div></div><div class="prog-bar-bg"><div class="prog-bar" style="width:${pct}%"></div></div></div><div class="reminder-box"><h2>Reminders</h2><div class="reminder-grid"><div class="reminder-slot"><label>Morning</label><input type="time" id="t_morning" value="${times.morning}" onchange="updateTime('morning',this.value)"/><div class="reminder-meds">Sompraz \u00b7 Actopro \u00b7 Neurobion \u00b7 Sharanga</div></div><div class="reminder-slot"><label>Evening</label><input type="time" id="t_evening" value="${times.evening}" onchange="updateTime('evening',this.value)"/><div class="reminder-meds">Actopro 100mg</div></div><div class="reminder-slot" style="grid-column:1/-1"><label>Night</label><input type="time" id="t_night" value="${times.night}" onchange="updateTime('night',this.value)"/><div class="reminder-meds">Probiotic / Prebiotic</div></div></div><button class="notif-btn" onclick="requestNotif()" ${granted?'disabled':''}>${granted?'Reminders Active':denied?'Blocked':'Enable Reminders'}</button></div><div class="tabs"><button class="tab-btn ${view==='week'?'active':''}" onclick="setView('week')">Week</button><button class="tab-btn ${view==='all'?'active':''}" onclick="setView('all')">Month</button></div>${view==='week'?`<div class="week-nav"><button onclick="shiftWeek(-1)">Prev</button><span>Week ${weekOffset+1}</span><button onclick="shiftWeek(1)">Next</button></div>`:''}<div class="table-wrap"><div class="table-scroll"><table><thead><tr><th class="med-col">Medicine</th>${days.map(i=>{const d=getDate(i),we=isWeekend(d);return`<th><div class="th-day${we?' weekend':''}">${d.toLocaleDateString('en-IN',{weekday:'short'})}</div><div class="th-num${we?' weekend':''}">${d.getDate()}</div><div class="th-mon">${d.toLocaleDateString('en-IN',{month:'short'})}</div></th>`;}).join('')}</tr></thead><tbody>${MEDS.map(med=>`<tr><td class="med-info"><div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:${med.color};flex-shrink:0;"></div><div><div class="med-name">${med.name}</div><div class="med-time">${med.timing}</div>${med.alternate?`<div class="alt-badge" style="color:${med.color};background:${med.light};">Alt Days</div>`:''}</div></div></td>${days.map(i=>{if(!shouldTake(med,i))return`<td><div class="dose-skip">\u2014</div></td>`;const done=isChecked(med.id,i);return`<td><button class="dose-btn${done?' done':''}" style="${done?`background:${med.color};`:`border-color:${med.color}60;`}" onclick="toggle('${med.id}',${i})">${done?'\u2713':'\u25cb'}</button></td>`;}).join('')}</tr>`).join('')}</tbody></table></div></div><div class="summary-grid">${MEDS.map(med=>{const{total:t,done:d,pct:p}=medProgress(med);return`<div class="sum-card"><div class="sum-card-head"><div class="sum-dot" style="background:${med.color}"></div><span class="sum-name">${med.name}</span></div><div class="sum-bar-bg"><div class="sum-bar" style="background:${med.color};width:${p}%"></div></div><div class="sum-nums"><span class="sum-taken">${d}/${t}</span><span class="sum-pct" style="color:${med.color}">${p}%</span></div></div>`;}).join('')}</div><div class="footer">Tap a dose to mark taken</div>`;}
+function updateTime(slot,val){times[slot]=val;saveTimes();if(notifPerm==="granted")scheduleAll();render();}
+function setView(v){view=v;if(v==="week")weekOffset=0;render();}
+function shiftWeek(d){weekOffset=Math.max(0,Math.min(Math.ceil(DAYS/7)-1,weekOffset+d));render();}
+render();
+if(notifPerm==="granted")scheduleAll();
+</script>
+</body>
+</html>
